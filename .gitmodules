@@ -1,0 +1,3 @@
+[submodule "installROS"]
+	path = installROS
+	url = git@github.com:jetsonhacks/installROS.git
