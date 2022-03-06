@@ -1,0 +1,9 @@
+Inter-Integrated Circuit aka I2C is a two-wire bidirectional connection used
+for serial communication.
+
+BAUD/second is how many bits are sent in one second.
+9600 bauds/second = 1/9600 bits/second = 104 microseconds per bit
+it's important that both devices are reading the same bit rate, otherwise the
+device will be reading the bits incorrectly and will result in garbage data.
+
+I2C needs two connections: SDA and SDL.
