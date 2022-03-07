@@ -1,0 +1,73 @@
+Build a Robot
+=============
+Model structure and requirements
+--------------------------------
+A description of the gazebo model directory structure and necessary files in the model
+directory.
+
+
+Model Database Structure
+------------------------
+
+Model Database
+    database.config : Meta data about the database. This is now populated automatically from CMakeLists.txt
+    model_1 : A directory for model_1
+        model.config : Meta-data about model_1
+        model.sdf : SDF description of the model
+        model.sdf.erb : Ruby embedded SDF model description
+        meshes : A directory for all COLLADA and STL files
+        materials : A directory which should only contain the textures and scripts subdirectories
+            textures : A directory for image files (jpg, png, etc).
+            scripts : A directory for OGRE material scripts
+        plugins: A directory for plugin source and header files
+
+Plugin Directory (optional) : contains plugins for the model.
+Meshes Directory (optional) : contains collada and/or stl files for the model.
+Material Directory (optional) : contains textures and scripts directory.
+Database Config (optional if offline) : the database.config file in the root of the model database.
+
+  Example of database.config file:
+  
+      <?xml version='1.0'?>
+      <database>
+          <name>name_of_this_database</name>
+          <license>Creative Commons Attribution 3.0 Unported</license>
+          <models>
+            <uri>file://model_directory</uri>
+          </models>
+      </database>
+
+<name> : name of database.
+<license> : license for the codels within the database.
+<models> : a listing of model URIs within the database
+    <uri> : URI for a model, (e.g. file://model_directory_name)
+
+
+Model Config
+------------
+Each model must have a model.config file in the model's root directory.
+
+  Example of model.config file:
+      <model>
+          <name>My Model Name</name>
+          <version>1.0</version>
+          <sdf version='1.5'>model.sdf</sdf>
+
+          <author>
+              <name>My name</name>
+              <email>name@email.address</email>
+          </author>
+
+          <description>
+              A description of the model
+          </description>
+      </model>
+
+<name> : name of model
+<version> : version of model
+<sdf> : name of sdf or urdf file that describes the model
+<author> : author of model
+    <name> : name of author
+    <email> : email of author
+<description> : what the model is and what the plugins do
+<depend> (optional) : dependencies for this model (usually other models)

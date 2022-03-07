@@ -1,0 +1,53 @@
+Goal: Get the blastoise prototype loaded in gazebo.
+
+[ ] Learn how to export blend file type to stl, dae or urdf file type.
+[ ] Learn how thrusters work in uuvsimulator.
+[ ] How to set up a thruster in uuv?
+[ ] what shape do they need?
+[ ] do they need a propellor?
+[ ] Fix thruster placement
+[ ] creating a robot model
+[ ] look into xml file format
+
+
+need to add stl/dae file to meshes in robot description
+some sort structure t the robot description catkin package
+what path do i need to add to insert a robot?
+
+
+URDF is not a very flexible format; SDF creaeted to solve shortcoming of URDF
+-> SDF >>>> URDF
+SDF uses XML to describe the robot
+
+Add URI to .sdf file in the robotest description package
+
+-----------------------------------------------------------------------------
+
+How to load an sdf model in gazebo
+add gazebo_ros as a dependency when creating a catkin package for the model
+
+
+gazebosim tutorials
+===================
+gazebo components
+-----------------
+gazebo uses sdf(simulation description format) files to describe objects and world in a
+simulation. At the highest level there are world files; using the .world extension. There are
+also model files which are used to modularize smaller components of a simulation; these types
+of files only contain one model description (i.e. <model> ... </model>)
+
+gazebo uses enviroment variables which contain the location of various resources that will be
+used in a simulation.
+
+Environment variables:
+  - GAZEBO_MODEL_PAT
+  - GAZEBO_RESOURCE_PATH
+  - GAZEBO_MASTER_URI
+  - GAZEBO_PLUGIN_PATH
+  - GAZEBO_MODEL_DATABASE_URI
+
+To modify these variables, first run the setup script for gazebo:
+  
+  $ source <install_path>/share/gazebo/setup.sh
+
+then, modify the variables through export commands.

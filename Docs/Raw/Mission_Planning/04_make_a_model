@@ -1,0 +1,85 @@
+Make a model
+============
+SDF models can be simple shapes or complex robots. An sdf is a conenction of
+links, joints, collision objects, visuals, and plugins.
+
+
+Components of SDF Models
+------------------------
+Links : Physical properties of one body of the model. Can contain many collision
+and visual elements. The less links there are in a model, the better the model
+performs and the more stable the model is.
+    
+    Collision : A geometry that is used for collision checking. Can be a simple
+      shape or a triangle mesh.
+    Visual : Used to visualize the link.
+    Inertial : Describes the dynamic properties of the link (e.g. madd,
+      rotational inertia matrix).
+    Sensor : Collects data from the world.
+    Light : Describes a light source attached to the link.
+
+Joint : A connection between two links. Parent and child relationship.
+Plugin : A shared library to control a model (e.g. uuv thruster manager).
+
+
+Building a Model
+----------------
+STEP 1 : Collect your meshes. Can use the built-in model editor inside of
+  gazebo, or create with blender or sketchup. Mesh files must be in STL, 
+  Collada, or OBJ format. Collada and OBJ preferred.
+
+STEP 2 : Make a model SDF file. Start with a simple shape for easy debugging,
+  and slowly add to the model.
+
+  Sample box.sdf
+    
+      <?xml version='1.0'?>
+          <sdf version="1.4">
+              <model name="my_model">
+                  <pose>0 0 0.5 0 0 0</pose>
+                  <static>true</static>
+                  <link name="link">
+                      <inertial>
+                          <mass>1.0</mass>
+                          <inertia> <!-- inertias are tricky to compute -->
+                              <!-- http://gazebosim.org/tutorials?tut=inertia&cat=build_robot -->
+                              <ixx>0.083</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+                              <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
+                              <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
+                              <iyy>0.083</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+                              <iyz>0.0</iyz>         <!-- for a box: iyz = 0 -->
+                              <izz>0.083</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+                          </inertia>
+                      </inertial>
+                      <collision name="collision">
+                          <geometry>
+                              <box>
+                                  <size>1 1 1</size>
+                              </box>
+                          </geometry>
+                      </collision>
+                      <visual name="visual">
+                          <geometry>
+                              <box>
+                                  <size>1 1 1</size>
+                              </box>
+                          </geometry>
+                      </visual>
+                  </link>
+              </model>
+          </sdf>
+
+    NOTE : The static tag is true (helpful during modeling); change to false if
+      object is movable.
+
+STEP 3 : Add to the model SDF file.
+  
+  Good order in which to add features
+      1. Add a link
+      2. Set the collision element
+      3. Set the visual element
+      4. Set the inertial properties
+      5. Repeat from step 1 until all links are added
+      6. Add all joints
+      7. Add all plugins
+
