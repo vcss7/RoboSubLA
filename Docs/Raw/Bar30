@@ -1,0 +1,49 @@
+Introduction
+============
+Bar30 is used to measure how deep underwater the the RoboSub is.
+
+Connections
+===========
+Uses I2C communication protocol.
+
+Reading Data
+============
+The sensor model is explicitly stated to avoid accidentally trying to read data
+off the bar02 sensor.
+
+#include <Wire.h>
+#include "MS5837.h"
+
+MS5837 bar;
+
+void setup()
+{
+    Serial.begin(9600);
+    
+    Wire.begin();
+
+    /* Initialize barometer */
+    while (!bar.init()) {
+        Serial.println("Init failed!");
+        Serial.println("Are SDA/SCL connected correctly?");
+        Serial.println("Blue Robotics Bar30: White=SDA, Green=SCL");
+        Serial.println("\n\n\n");
+        delay(5000);
+    }
+
+    bar.setModel(MS5837::MS5837_30BA);
+
+    bar.setFluidDensity(997 /* kg/m^3 freshwater*/);
+}
+void loop()
+{
+    /* Update pressure and temperature readings */
+    bar.read();
+
+    bar.pressure();        /* mbar */
+    bar.temperature());    /* deg C */
+    bar.depth();           /* meters */
+    bar.altitude()         /* meters above mean sea level */
+
+    delay(1000);
+}
