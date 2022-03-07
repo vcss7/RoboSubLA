@@ -2,67 +2,121 @@ Adafruit is an intertia measurement unit (IMU).
 
 Intro
 =====
-The BNO055 is a 9-Axis IMU (Inertial Measurement Unit) sensor. It uses three sensors for 3D space
-orientation: accelerometer, gyroscope, and magnetometer. It has a fourth sensor;
-a thermometer.
-
-What are the 9-Axis?
-XYZ accelerometer   // Linear acceleration
-XYZ Gyro            // Rotation acceleration
-XYZ Magnetometer    // Strength of Magnetic Vector
-
-What's the difference between an accelerometer and a gyro?
-
-How to fuse the gyro and accelerometer data together to get better data?
-
-How to make a compass to check what direction the IMU is spinning?
-
-What are Euler angles? Understanding Euler angles.
-
-Quaternions for solving the issue of being upside down.
-
-setExtCrystalUse, what is the crystal? what does it matter? Why is the external
-crystal more accurate?
-External Crystal provides better timing accuracy: https://github.com/adafruit/Adafruit_BNO055/issues/30
-
-Roll, Pitch, and Yaw
-====================
+The BNO055 is a 9-axis IMU (Inertial Measurement Unit) sensor. It has a
+thermometer and three sensors for 3D space orientation: accelerometer, gyroscope,
+and magnetometer. Raw data from the orietation sensors to absolute orientation 
+in two forms: Euler Angles and Quaternions.
 
 Connections
 ===========
-Is a I2C (Inter-Integrated Circuit)     // What is an Inter-Integrated Circuit? 
+This sensor uses the I2C Communication Protocol. This protocol uses two
+connections: SDA, for Serial Data transfer and SCL, for Serial Clock signal.
 
-Connections for MEGA/NANO/TEENSY
+In total, 4 connections need to be made from the BNO055 to the microcontroller.
 
-SDA Pin Connections
-SDC Pin Connections
-Ground Connection.
-3.3 or 5 Volt Connection.
+Sensor Vin to power supply
+Sensor GND to GND
+Sensor SDA to microcontroller SDA
+Sensor SCL to microcontroller SCL
 
 Reading Data
 ============
+The relevent data for the RoboSub are the Euler Angles and Quaternions.
 
-3 sensors
-    1. Accelorameter - measures forces being applied to the sensor.
-    2. Gyroscope - determines orientation by using gravity.
-    3. Magnetometer - measures magnetism.
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+
+Adafruit_BNO055 bno = Adafruit_BNO055();
+
+void setup(void)
+{
+    Serial.begin(9600);
+
+    /* Initialize the sensor */
+    if(!bno.begin())
+    {
+        /* There was a problem detecting the BNO055 ... check your connections */
+        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        while(1);
+    }
+
+    delay(1000);
+    
+    /* Gives more accurate data */
+    bno.setExtCrystalUse(true);
+}
+
+void loop()
+{
+    /* Euler Angles */
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+
+    Serial.print("X: ");
+    Serial.print(euler.x());
+    Serial.print(" Y: ");
+    Serial.print(euler.y());
+    Serial.print(" Z: ");
+    Serial.print(euler.z());
+    Serial.println("");
+
+    /* Quaternions */
+    imu::Quaternion quat = bno.getQuat();
+
+    Serial.print("qW: ");
+    Serial.print(quat.w(), 4);
+    Serial.print(" qX: ");
+    Serial.print(quat.y(), 4);
+    Serial.print(" qY: ");
+    Serial.print(quat.x(), 4);
+    Serial.print(" qZ: ");
+    Serial.print(quat.z(), 4);
+    Serial.println("");
+}
 
 Calibration
 ===========
-Sensor must be calibrating for more accurate data. As is, the sensor reads
-"good enough" data.
-Magnets affect the calibration in the magnetometer.
+Calibrate the IMU at start up. By calibrating each of the sensors, the IMU 
+will provide more accurate data. Calibration status range from 0 to 3, 0 meaning
+not calbrated and 3 meaning fully calibrated. There are 4 calibration statuses:
+one for the overall system and one for each of the orientation sensors.
 
 Caibrate sensors
     Gyroscope - Let the BNO055 sit still for a couple of seconds.
-    Magnetometer - Move sensor in a firgure 8, or wave it around.
+    Magnetometer - Calibrates with normal movement of the IMU.
     Accelorameter - Angle the accelorameter in different directions and hold
         each angle for a couple of seconds.
 
+Checking calibration status.
+
+void displayCalStatus(void)
+{
+    /* Get the four calibration values (0..3) */
+    /* Any sensor data reporting 0 should be ignored, */
+    /* 3 means 'fully calibrated" */
+    uint8_t system, gyro, accel, mag;
+    system = gyro = accel = mag = 0;
+    bno.getCalibration(&amp;system, &amp;gyro, &amp;accel, &amp;mag);
+
+    /* The data should be ignored until the system calibration is &gt; 0 */
+    Serial.print("\t");
+        if (!system)
+    {
+        Serial.print("! ");
+    }
+
+    /* Display the individual values */
+    Serial.print("Sys:");
+    Serial.print(system, DEC);
+    Serial.print(" G:");
+    Serial.print(gyro, DEC);
+    Serial.print(" A:");
+    Serial.print(accel, DEC);
+    Serial.print(" M:");
+    Serial.println(mag, DEC);
+}
+
 Issues
 ======
-Problem: Euler angles has issues keeping absolute orientation when rotating more
-    than 90 degrees. 
-Proposal: Use Quaternions, which have less ambiguity, for the computing, and
-    turn the Quaternions to Euler angles at the last second to interface with the
-    PID controller and other part of the system.
+Problem: Gimbal lock with Euler angles.
+Solution: Use Quaternions.
