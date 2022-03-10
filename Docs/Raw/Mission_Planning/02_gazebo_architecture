@@ -1,0 +1,56 @@
+gazebo tutorials
+================
+gazebo server
+-------------
+gazebo server is a command line tool that evaluates a sdl world file and simulates it. Pass a
+world file_name path to the cli (can be relative to current directory, absolute path or
+relative to a path in GAZEBO_RESOURCE_PATH).
+
+  $ gzserver <world_filename>
+
+
+gazebo client
+-------------
+gazebo client conencts to a running gzserver and visualizes the elements
+
+  $ gzclient
+
+
+server + graphical client in one
+--------------------------------
+use the gazebo command as a shorthand for running both a gzserver and a gzclient
+
+  $ gazebo worlds/empty_sky.world
+
+
+plugins
+-------
+a plugin can be specified in an sdf world file or in the command line (use the -s flag to
+specify the plugin is a system plugin).
+
+  $ gzserver -s <plugin_filename>
+
+<plugin_filename> is the path to a shared library in the GAZEBO_PLUGIN_PATH variable.
+
+gazebo architecture
+-------------------
+Gazebo provides two executable programs (commandline interfaces); one is to run the
+simulation, gzserver, and the other is to interact with the simultion, gzclient.
+
+Communication between processes
+-------------------------------
+Can be done with the publish/subscribe commmunication paradigm. Mainly, the gzserver provides a
+simulated data, and the graphical user interface recieves and displays the data.
+
+
+System
+------
+Gazebo Master: essentailly a topic name server, manages topics.
+
+Gazebo comes with:
+  - communication library
+  - physics library
+  - redering library
+  - sensor generation
+  - gui
+  - plugins
