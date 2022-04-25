@@ -14,6 +14,9 @@ declare -a ARDUINO_LIBRARIES=(
   "PID"
 )
 
+# the catkin workspace for RoboSub
+eval "$WORKSPACE_DIRECTORY"=~/RoboSub_WS
+
 download_arduino_cli () {
   # check if arduino-cli program already exists
   if arduino-cli version &> /dev/null; then
@@ -78,7 +81,30 @@ setup_arduino_libraries () {
 }
 
 setup_ros_library () {
-  true
+  if ! dpkg -l | grep ros-melodic; then
+    echo "Please download ROS to setup the roslib arduino library."
+    return 1
+  fi
+
+  if [[ ! -d $WORKSPACE_DIRECTORY/src ]]; then
+    mkdir -p "$WORKSPACE_DIRECTORY/src"
+  fi
+
+  git clone https://github.com/ros-drivers/rosserial.git \
+    --branch melodic-devel \
+    --single-branch \
+    "$WORKSPACE_DIRECTORY/src"
+
+  cd "$WORKSPACE_DIRECTORY"
+  catkin_make
+  catkin_make install
+
+  if [[ ! -d ~/Arduino/libraries ]]; then
+    mkdir -p ~/Arduino/libraries
+  fi
+  
+  cd ~/Arduino/libraries
+  rosrun rosserial_arduino make_libraries.py .
 }
 
 
