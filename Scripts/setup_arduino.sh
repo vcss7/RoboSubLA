@@ -2,18 +2,30 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-sudo apt update
+
+# the arduino libraries used by the RoboSub (may not be all)
+declare -a ARDUINO_LIBRARIES=(
+  "Adafruit BNO055"
+  "Adafruit BusIO"
+  "Adafruit Circuit Playground"
+  "Adafruit Unified Sensor"
+  "BlueRobotics MS5837 Library"
+  "Keyboard"                    
+  "PID"
+)
 
 download_arduino_cli () {
-  # check for dependencies
-  if ! curl -V &> /dev/null; then
-    sudo apt -y install curl
-  fi
-
   # check if arduino-cli program already exists
   if arduino-cli version &> /dev/null; then
     echo "arduino-cli is already installed"
-    exit 1
+    return 0
+  fi
+
+  sudo apt update
+
+  # check for dependencies
+  if ! curl -V &> /dev/null; then
+    sudo apt -y install curl
   fi
 
   # eval is used to handle relative paths
@@ -53,8 +65,16 @@ setup_microprocessor () {
   true
 }
 
-setup_sensor_libraries () {
-  true
+setup_arduino_libraries () {
+  if ! arduino-cli version; then
+    echo "arduino-cli is not installed"
+    exit 1
+  fi
+
+  for LIBRARY in "${ARDUINO_LIBRARIES[@]}"; do
+    arduino-cli lib download "$LIBRARY"
+    arduino-cli lib install "$LIBRARY"
+  done
 }
 
 setup_ros_library () {
@@ -65,5 +85,5 @@ setup_ros_library () {
 # function calls
 download_arduino_cli
 setup_microprocessor
-setup_sensor_libraries
+setup_arduino_libraries
 setup_ros_libraries
