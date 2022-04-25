@@ -3,6 +3,9 @@ set -euo pipefail
 IFS=$'\n\t'
 
 
+# TODO
+  # once script is "done", go through and add comments to anything unclear
+
 # the arduino libraries used by the RoboSub (may not be all)
 declare -a ARDUINO_LIBRARIES=(
   "Adafruit BNO055"
@@ -15,7 +18,7 @@ declare -a ARDUINO_LIBRARIES=(
 )
 
 # the catkin workspace for RoboSub
-eval "$WORKSPACE_DIRECTORY"=~/RoboSub_WS
+WORKSPACE_DIRECTORY=~/RoboSub_WS
 
 download_arduino_cli () {
   # check if arduino-cli program already exists
@@ -74,14 +77,25 @@ setup_arduino_libraries () {
     exit 1
   fi
 
+  # TODO
+  # check if libraries are already installed
+    # compare list of installed libs with ARDUINO_LIBRARIES array
+    # skip or delete libs already installed
   for LIBRARY in "${ARDUINO_LIBRARIES[@]}"; do
+    # TODO
+      # handle not downloaded or installed error
+      # possibly redirect stdout
+      # give summary of libraries installed
     arduino-cli lib download "$LIBRARY"
     arduino-cli lib install "$LIBRARY"
   done
 }
 
 setup_ros_library () {
-  if ! dpkg -l | grep ros-melodic; then
+  # check if ROS is installed
+  # TODO
+    # redirect output to /dev/null
+  if ! dpkg -l | grep ros-melodic &> /dev/null; then
     echo "Please download ROS to setup the roslib arduino library."
     return 1
   fi
@@ -90,19 +104,29 @@ setup_ros_library () {
     mkdir -p "$WORKSPACE_DIRECTORY/src"
   fi
 
+  # TODO
+    # check if there is a git repo with this name already
   git clone https://github.com/ros-drivers/rosserial.git \
     --branch melodic-devel \
     --single-branch \
-    "$WORKSPACE_DIRECTORY/src"
+    "$WORKSPACE_DIRECTORY/src/rosserial"
 
+  # TODO
+    # check if catkin is installed
   cd "$WORKSPACE_DIRECTORY"
   catkin_make
   catkin_make install
 
+  # TODO
+    # check if arduino is installed ?
+    # check the directory of arduino library environment variable
+    # check if roslib is already a arduino library
   if [[ ! -d ~/Arduino/libraries ]]; then
     mkdir -p ~/Arduino/libraries
   fi
-  
+
+  # TODO
+    # make less dynamic
   cd ~/Arduino/libraries
   rosrun rosserial_arduino make_libraries.py .
 }
@@ -112,4 +136,4 @@ setup_ros_library () {
 download_arduino_cli
 setup_microprocessor
 setup_arduino_libraries
-setup_ros_libraries
+setup_ros_library
