@@ -2,6 +2,8 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+sudo apt update
+
 download_arduino_cli () {
   # check for dependencies
   if ! curl -V &> /dev/null; then
@@ -20,7 +22,7 @@ download_arduino_cli () {
 
   # ensure install directory exists
   if [[ ! -d $ARDUINO_BINDIR ]]; then 
-    mkdir -p $ARDUINO_BINDIR
+    mkdir -p "$ARDUINO_BINDIR"
   fi
 
   # add arduino-cli bin directory to PATH
@@ -36,15 +38,15 @@ download_arduino_cli () {
     | BINDIR=$ARDUINO_BINDIR sh
 
   # command line tab completion
-  if cd $ARDUINO_BINDIR; then 
-    sudo ./arduino-cli completion bash > arduino-cli.sh
+  if cd "$ARDUINO_BINDIR"; then 
+    ./arduino-cli completion bash > arduino-cli.sh
     yes | sudo mv arduino-cli.sh /etc/bash_completion.d
   else
     echo "arduino-cli tab completion was not configured"
   fi
 
 
-  echo "\nRestart your terminal or source the bashrc file by running: source ~/.bashrc"
+  printf "\nRestart your terminal or source the bashrc file by running: source ~/.bashrc"
 }
 
 setup_microprocessor () {
@@ -58,3 +60,10 @@ setup_sensor_libraries () {
 setup_ros_library () {
   true
 }
+
+
+# function calls
+download_arduino_cli
+setup_microprocessor
+setup_sensor_libraries
+setup_ros_libraries
