@@ -83,20 +83,32 @@ setup_arduino_libraries () {
     return 1
   fi
 
-  # grab a list of installed libraries
-  # awk and sed used for formatting
-  INSTALLED_ARDUINO_LIBRARIES=$(arduino-cli lib list \
-    | awk '{if (NR!=1) {print $1}}' \
-    | sed 's/_/ /g'
-  )
+  # save a list of installed libraries to a tmp file
+  # awk and sed are used for formatting
+  arduino-cli lib list \
+  | awk '{if (NR!=1) {print $1}}' \
+  | sed 's/_/ /g' \
+  > $$tmp
 
-  # check if library name is a substring in installed library list
-  # if it isn't, attempt to download and install the library
-  # TODO: Better way of checking if library is installed
-    # could be a library name is a substring of another library name but not the
-    # same library (e.g. PIDv_2 =~ PID returns true)
+  # iterate through array of arduino libraries
   for LIBRARY in "${ARDUINO_LIBRARIES[@]}"; do
-    if [[ ! $INSTALLED_ARDUINO_LIBRARIES =~ $LIBRARY ]]; then
+    ALREADY_INSTALLED="false"
+
+    # take tmp file as input for the while loop and read a line
+    while read -r LINE; do
+      # check if library is exactly line (string comparison)
+      if [[ "$LIBRARY" == "$LINE" ]]; then
+        echo "${GREEN_FG}$LIBRARY is installed!${RESET_FG}"
+        ALREADY_INSTALLED="true"
+        # break from while loop if library name found
+        break
+      else
+        ALREADY_INSTALLED="false"
+      fi
+    done < $$tmp
+
+    # try to install library if not found in list of installed libraries
+    if [[ $ALREADY_INSTALLED == "false" ]]; then
       echo "${YELLOW_FG}Attempting to install $LIBRARY${RESET_FG}"
       if arduino-cli lib download "$LIBRARY" \
           && arduino-cli lib install "$LIBRARY"; then
@@ -104,10 +116,11 @@ setup_arduino_libraries () {
       else
         echo "${RED_FG}$LIBRARY was not installed.${RESET_FG}"
       fi
-    else
-      echo "${GREEN_FG}$LIBRARY is installed!${RESET_FG}"
     fi
   done
+
+  # clean up tmp file
+  rm -f $$tmp
 }
 
 setup_ros_library () {
@@ -150,9 +163,9 @@ setup_ros_library () {
   rosrun rosserial_arduino make_libraries.py .
 }
 
-
-# function calls
-download_arduino_cli
-setup_microprocessor
+#
+## function calls
+#download_arduino_cli
+#setup_microprocessor
 setup_arduino_libraries
-setup_ros_library
+#setup_ros_library
