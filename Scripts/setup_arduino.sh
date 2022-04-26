@@ -6,6 +6,12 @@ IFS=$'\n\t'
 # TODO
   # once script is "done", go through and add comments to anything unclear
 
+# some variables to make output pretty(er)
+RED_FG=$(tput setaf 1)
+GREEN_FG=$(tput setaf 2)
+YELLOW_FG=$(tput setaf 3)
+RESET_FG=$(tput sgr0)
+
 # the arduino libraries used by the RoboSub (may not be all)
 declare -a ARDUINO_LIBRARIES=(
   "Adafruit BNO055"
@@ -74,20 +80,33 @@ setup_microprocessor () {
 setup_arduino_libraries () {
   if ! arduino-cli version; then
     echo "arduino-cli is not installed"
-    exit 1
+    return 1
   fi
 
-  # TODO
-  # check if libraries are already installed
-    # compare list of installed libs with ARDUINO_LIBRARIES array
-    # skip or delete libs already installed
+  # grab a list of installed libraries
+  # awk and sed used for formatting
+  INSTALLED_ARDUINO_LIBRARIES=$(arduino-cli lib list \
+    | awk '{if (NR!=1) {print $1}}' \
+    | sed 's/_/ /g'
+  )
+
+  # check if library name is a substring in installed library list
+  # if it isn't, attempt to download and install the library
+  # TODO: Better way of checking if library is installed
+    # could be a library name is a substring of another library name but not the
+    # same library (e.g. PIDv_2 =~ PID returns true)
   for LIBRARY in "${ARDUINO_LIBRARIES[@]}"; do
-    # TODO
-      # handle not downloaded or installed error
-      # possibly redirect stdout
-      # give summary of libraries installed
-    arduino-cli lib download "$LIBRARY"
-    arduino-cli lib install "$LIBRARY"
+    if [[ ! $INSTALLED_ARDUINO_LIBRARIES =~ $LIBRARY ]]; then
+      echo "${YELLOW_FG}Attempting to install $LIBRARY${RESET_FG}"
+      if arduino-cli lib download "$LIBRARY" \
+          && arduino-cli lib install "$LIBRARY"; then
+        echo "${GREEN_FG}$LIBRARY was installed successfully.${RESET_FG}"
+      else
+        echo "${RED_FG}$LIBRARY was not installed.${RESET_FG}"
+      fi
+    else
+      echo "${GREEN_FG}$LIBRARY is installed!${RESET_FG}"
+    fi
   done
 }
 
