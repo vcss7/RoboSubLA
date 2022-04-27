@@ -125,42 +125,95 @@ setup_arduino_libraries () {
 
 setup_ros_library () {
   # check if ROS is installed
-  # TODO
-    # redirect output to /dev/null
-  if ! dpkg -l | grep ros-melodic &> /dev/null; then
-    echo "Please download ROS to setup the roslib arduino library."
+  if ! dpkg -l | grep ros-melodic- &> /dev/null; then
+    printf "%sROS Melodic is not installed and is required for " "${RED_FG}"
+    printf "ros_lib.%s\n" "${RESET_FG}"
+    exit
+  fi
+
+  # check if there is a workspace src directory
+  if [[ ! -d $WORKSPACE_DIRECTORY/src ]]; then
+    mkdir -pv "$WORKSPACE_DIRECTORY/src"
+  fi
+
+  # check if there is a rosserial git repo in workspace src directory
+  # if there is, prompt user for overwrite
+  if [[ -d $WORKSPACE_DIRECTORY/src/rosserial ]]; then
+    printf "There is a directory at %s/src/rosserial " $WORKSPACE_DIRECTORY 
+    printf "and it is not empty.\n"
+    read -rp "Do you want to overwrite it with git clone? [Y/n] " yn
+    case $yn in
+      [Nn][Oo] | [Nn] )
+        ;;
+      * )
+        rm -rf $WORKSPACE_DIRECTORY/src/rosserial
+        git clone https://github.com/ros-drivers/rosserial.git \
+          --branch melodic-devel \
+          --single-branch \
+          "$WORKSPACE_DIRECTORY/src/rosserial"
+        ;;
+    esac
+  else
+    git clone https://github.com/ros-drivers/rosserial.git \
+      --branch melodic-devel \
+      --single-branch \
+      "$WORKSPACE_DIRECTORY/src/rosserial"
+  fi
+
+  # check if catkin is installed
+  # if it isn't, return control to outside function
+  if ! dpkg -l | grep ros-melodic-catkin &> /dev/null; then
+    printf "%sCatkin is not installed and is required to build " "${RED_FG}"
+    printf "ros_lib.%s\n" "${RESET_FG}"
     return 1
   fi
 
-  if [[ ! -d $WORKSPACE_DIRECTORY/src ]]; then
-    mkdir -p "$WORKSPACE_DIRECTORY/src"
+  # TODO: check cd was successful
+  cd "$WORKSPACE_DIRECTORY"
+
+  # build packages in workspace (effectively rosserial)
+  # if build fail, return control to outside function
+  if catkin_make && catkin_make install; then
+    printf "%srosserial successfully built.%s\n" "${GREEN_FG}" "${RESET_FG}"
+  else
+    printf "%sCould not build ros_lib.%s\n" "${RED_FG}" "${RESET_FG}"
+    return 1
   fi
 
-  # TODO
-    # check if there is a git repo with this name already
-  git clone https://github.com/ros-drivers/rosserial.git \
-    --branch melodic-devel \
-    --single-branch \
-    "$WORKSPACE_DIRECTORY/src/rosserial"
+  # TODO: check if arduino is installed ?
 
-  # TODO
-    # check if catkin is installed
-  cd "$WORKSPACE_DIRECTORY"
-  catkin_make
-  catkin_make install
-
-  # TODO
-    # check if arduino is installed ?
-    # check the directory of arduino library environment variable
-    # check if roslib is already a arduino library
+  # make sure there is a Arduino libraries directory
   if [[ ! -d ~/Arduino/libraries ]]; then
     mkdir -p ~/Arduino/libraries
   fi
 
-  # TODO
-    # make less dynamic
-  cd ~/Arduino/libraries
-  rosrun rosserial_arduino make_libraries.py .
+  # check for rosserial_arduino ros package
+  # if it isn't there, return control to outside function
+  if ! rospack list-names | grep rosserial_arduino &> /dev/null; then
+    printf "%sThere was a problem finding the rosserial_arduino package.\n" \
+      "${RED_FG}"
+    printf "Try sourcing bash again and make sure ROS, "
+    printf "catkin and arduino are insalled.%s\n" "${RESET_FG}"
+    return 1
+  fi
+
+  # check if ros_lib arduino library directory already exists
+  # if it does, prompt user for reinstall
+  if [[ -d ~/Arduino/libraries/ros_lib ]]; then
+    read -rp "ros_lib is already installed. Do you want to reinstall? [Y/n] " yn
+    case $yn in
+      [Nn][Oo] | [Nn] ) 
+        ;;
+      * ) 
+        rm -rf ~/Arduino/libraries/ros_lib
+        ;;
+    esac
+  fi
+
+  # TODO: maybe redirect output to /dev/null
+  if rosrun rosserial_arduino make_libraries.py ~/Arduino/libraries; then
+    printf "%sros_lib successfully installed!%s\n" "${GREEN_FG}" "${RESET_FG}"
+  fi
 }
 
 #
