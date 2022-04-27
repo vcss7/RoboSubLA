@@ -160,6 +160,10 @@ setup_ros_library () {
       "$WORKSPACE_DIRECTORY/src/rosserial"
   fi
 
+  # TODO: before building rosserial package, add teensy 4.1 Microcontroller Unit
+  #       name to the ArduinoHardware.h file in ros_lib package. (with patch 
+  #       file)
+
   # check if catkin is installed
   # if it isn't, return control to outside function
   if ! dpkg -l | grep ros-melodic-catkin &> /dev/null; then
