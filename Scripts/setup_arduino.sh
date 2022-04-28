@@ -160,15 +160,34 @@ setup_ros_library () {
       "$WORKSPACE_DIRECTORY/src/rosserial"
   fi
 
-  # TODO: before building rosserial package, add teensy 4.1 Microcontroller Unit
-  #       name to the ArduinoHardware.h file in ros_lib package. (with patch 
-  #       file)
+  # save the directory of where the script is located
+  # assumption is the patch file is in the same directory as script
+  PATCH_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
+  # save the absolute path to the ArduinoHardware.h file
+  ARDUINO_HARDWARE_H_PATH=$(find "$WORKSPACE_DIRECTORY/src/rosserial" \
+                            -name ArduinoHardware.h)
+
+  # check if there is a file named ArduinoHardware.patch and a file path saved
+  # to ARDUINO_HARDWARE_H_PATH variable
+  # if there is, try applying the patch
+  if [[ -f "$PATCH_DIR/ArduinoHardware.patch" && -f "$ARDUINO_HARDWARE_H_PATH" ]];
+  then 
+    printf "%sChecking if ArduinoHardware.h can be patched..%s\n" \
+           "${YELLOW_FG}" "${RESET_FG}"
+    if patch --dry-run "$ARDUINO_HARDWARE_H_PATH" < "$PATCH_DIR/ArduinoHardware.patch"; 
+    then
+      patch "$ARDUINO_HARDWARE_H_PATH" < "$PATCH_DIR/ArduinoHardware.patch"
+      printf "%sArduinoHardware.h successfully patched!%s\n" \
+             "${GREEN_FG}" "${RESET_FG}"
+    fi
+  fi
 
   # check if catkin is installed
   # if it isn't, return control to outside function
   if ! dpkg -l | grep ros-melodic-catkin &> /dev/null; then
     printf "%sCatkin is not installed and is required to build " "${RED_FG}"
-    printf "ros_lib.%s\n" "${RESET_FG}"
+    printf "rosserial.%s\n" "${RESET_FG}"
     return 1
   fi
 
@@ -220,9 +239,9 @@ setup_ros_library () {
   fi
 }
 
-#
-## function calls
-#download_arduino_cli
-#setup_microprocessor
+
+# function calls
+download_arduino_cli
+setup_microprocessor
 setup_arduino_libraries
-#setup_ros_library
+setup_ros_library
