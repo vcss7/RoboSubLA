@@ -1,0 +1,8 @@
+Task Element                Base Dimensions                Ratio(H:W)
+------------                ---------------                ----------
+GATE                        120 in. x 60 in.               2:1
+GATE IMAGE                  6 in. x 12 in.                 1:2
+
+PATH                        24 in. x 6 in.                 4:1
+
+BUOY IMAGE                  48 in. x 24 in.                2:1
