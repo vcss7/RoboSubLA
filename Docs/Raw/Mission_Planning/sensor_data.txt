@@ -1,0 +1,9 @@
+Data                         Units
+----                         -----
+Roll                         Degrees
+Pitch                        Degrees
+Yaw                          Degrees
+
+Depth                        Meters
+
+Distance of Object           Meters
