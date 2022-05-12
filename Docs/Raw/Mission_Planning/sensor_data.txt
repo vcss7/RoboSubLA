@@ -6,4 +6,12 @@ Yaw                          Degrees
 
 Depth                        Meters
 
+Object Name                  String
+Confidence Level             Decimal (0-1)
+Center of Bounding Box       Pixels
+Corner Coord Bounding Box    Pixels
+
+Angle from Object            Degrees
 Distance of Object           Meters
+
+
